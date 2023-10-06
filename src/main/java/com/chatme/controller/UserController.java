@@ -26,38 +26,20 @@ public class UserController
 			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Username is required";
 		if (!userRepository.findAllByUsername(user.getUsername()).isEmpty())
 			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Username (" + user.getUsername() + ") is already exists";
-		// Firstname Validation
-		if (ObjectChecker.isEmptyOrNull(user.getFirstname()))
-			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Firstname is required";
-		// Lastname Validation
-		if (ObjectChecker.isEmptyOrNull(user.getLastname()))
-			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Lastname is required";
-		// Email Validation
-		if (ObjectChecker.isNotEmptyOrNull(user.getEmail()))
-		{
-			if (!userRepository.findAllByEmail(user.getEmail()).isEmpty())
-				errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Email (" + user.getEmail() + ") already exists";
-			if (!isValidEmail(user.getEmail()))
-				errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Email (" + user.getEmail() + ") is not valid";
-		}
-		// Password Validation
-		if (ObjectChecker.isEmptyOrNull(user.getPassword()))
-			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Password is required";
-		if (!isValidPassword(user.getPassword()))
-			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + """
-					- Invalid Password.
-						Password Constraints are:
-						- Contains digits at least one.
-						- Contains a lower case letter at least one.
-						- Contains a upper case letter at least one.
-						- Contains a special character at least one.
-						- No whitespace allowed.
-						- Password length must be greater than or equal to eight characters.""";
-		user.setPassword(user.getPassword());
+		errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Firstname", user.getFirstname()));
+		errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Lastname", user.getLastname()));
+		errorMsg = appendValidationMsgToMyMsg(errorMsg, validateEmailAndAppendMsgIfNeeded(user.getEmail()));
+		errorMsg = appendValidationMsgToMyMsg(errorMsg, validatePasswordAndAppendMsgIfNeeded(user.getPassword()));
 		if (ObjectChecker.isNotEmptyOrNull(errorMsg))
 			return ResponseEntity.badRequest().body(errorMsg);
+		user.setPassword(user.getPassword());
 		userRepository.save(user);
 		return ResponseEntity.ok("Successful");
+	}
+
+	private String appendValidationMsgToMyMsg(String errorMsg, String validationMsg)
+	{
+		return (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + validationMsg;
 	}
 
 	@GetMapping(value = "/get-all")
@@ -86,6 +68,7 @@ public class UserController
 		if (friend == null)
 			return ResponseEntity.badRequest().body("Can't find user with id (" + friendId + ")");
 		currentUser.getFriends().add(friend);
+		friend.getFriends().add(currentUser);
 		userRepository.save(currentUser);
 		return ResponseEntity.ok("User (" + friendId + ") has been added to your friends.");
 	}
@@ -106,5 +89,92 @@ public class UserController
 		Pattern pattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\\S+$).{8,}$");
 		Matcher matcher = pattern.matcher(password);
 		return matcher.matches();
+	}
+
+	@PatchMapping("/update-user")
+	public ResponseEntity<String> updateUserData(@ModelAttribute User user)
+	{
+		User realUser = userRepository.findById(user.getId()).orElse(null);
+		if (realUser == null)
+			return ResponseEntity.badRequest().body("Wrong User Id");
+		String errorMsg = "";
+		if (ObjectChecker.isNotEmptyOrNull(user.getFirstname()))
+		{
+			errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Firstname", user.getFirstname()));
+			realUser.setFirstname(user.getFirstname());
+		}
+		if (ObjectChecker.isNotEmptyOrNull(user.getLastname()))
+		{
+			errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Lastname", user.getLastname()));
+			realUser.setLastname(user.getLastname());
+		}
+		if (ObjectChecker.isNotEmptyOrNull(user.getEmail()))
+		{
+			errorMsg = appendValidationMsgToMyMsg(errorMsg, validateEmailAndAppendMsgIfNeeded(user.getEmail()));
+			realUser.setEmail(user.getEmail());
+		}
+		if (ObjectChecker.isNotEmptyOrNull(user.getPassword()))
+		{
+			errorMsg = appendValidationMsgToMyMsg(errorMsg, validatePasswordAndAppendMsgIfNeeded(user.getPassword()));
+			realUser.setPassword(user.getPassword());
+		}
+		if (ObjectChecker.isNotEmptyOrNull(errorMsg))
+		{
+			return ResponseEntity.badRequest().body(errorMsg);
+		}
+		userRepository.save(realUser);
+		return ResponseEntity.ok("Success");
+	}
+
+	private String validatePasswordAndAppendMsgIfNeeded(String value)
+	{
+		String errorMsg = "";
+		errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + validateRequiredFieldsAndAppendMsgIfNeeded("Password", value);
+		if (!isValidPassword(value))
+			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + """
+					- Invalid Password.
+						Password Constraints are:
+						- Contains digits at least one.
+						- Contains a lower case letter at least one.
+						- Contains a upper case letter at least one.
+						- Contains a special character at least one.
+						- No whitespace allowed.
+						- Password length must be greater than or equal to eight characters.""";
+		return errorMsg;
+	}
+
+	private String validateEmailAndAppendMsgIfNeeded(String value)
+	{
+		if (ObjectChecker.isEmptyOrNull(value))
+			return "";
+		String errorMsg = "";
+		if (!userRepository.findAllByEmail(value).isEmpty())
+			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Email (" + value + ") already exists";
+		if (!isValidEmail(value))
+			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Email (" + value + ") is not valid";
+		return errorMsg;
+	}
+
+	private String validateRequiredFieldsAndAppendMsgIfNeeded(String fieldName, String fieldValue)
+	{
+		if (ObjectChecker.isEmptyOrNull(fieldValue))
+			return "- " + fieldName + " is required";
+		return "";
+	}
+
+	@DeleteMapping("delete-user")
+	public ResponseEntity<String> deleteUser(@RequestParam Long id)
+	{
+		if (userRepository.findById(id).isEmpty())
+			return ResponseEntity.badRequest().body("User not found");
+		userRepository.deleteById(id);
+		return ResponseEntity.ok("Success");
+	}
+
+	@DeleteMapping("delete-all-user")
+	public ResponseEntity<String> deleteAllUsers()
+	{
+		userRepository.deleteAll();
+		return ResponseEntity.ok("Success");
 	}
 }
