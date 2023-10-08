@@ -155,7 +155,7 @@ public class UserController
 		return errorMsg;
 	}
 
-	private String validateRequiredFieldsAndAppendMsgIfNeeded(String fieldName, String fieldValue)
+	public static String validateRequiredFieldsAndAppendMsgIfNeeded(String fieldName, String fieldValue)
 	{
 		if (ObjectChecker.isEmptyOrNull(fieldValue))
 			return "- " + fieldName + " is required";
