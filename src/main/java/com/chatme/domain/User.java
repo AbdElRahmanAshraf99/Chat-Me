@@ -10,7 +10,7 @@ import java.util.*;
 
 @Entity
 @Data
-@Table(name = "CHAT_USER")
+@Table(name = "ChatUser")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -25,13 +25,17 @@ public class User {
     private LocalDateTime creationDate;
 
     @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "user_friends", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "field_id"))
+    @JoinTable(name = "ChatUser_friends", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "friend_id"))
     @JsonIgnoreProperties({"friends","chatRooms"})
     private List<User> friends = new ArrayList<>();
 
-
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "user_chat_rooms", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "chat_room_id"))
-    @JsonIgnoreProperties({"members", "admins"})
-    private List<ChatRoom> chatRooms = new ArrayList<>();
+    //    @ManyToMany(cascade = CascadeType.ALL)
+    //    @JoinTable(name = "ChatRoom_members", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "chatRoom_id"))
+    //    @JsonIgnoreProperties({"members", "admins"})
+    @OneToMany(mappedBy = "user")
+    @JsonIgnoreProperties({"user"})
+    private List<UserPrivateChatRooms> userPrivateChatRooms = new ArrayList<>();
+    @OneToMany(mappedBy = "user")
+    @JsonIgnoreProperties({"user"})
+    private List<UserGroupChatRooms> userGroupChatRooms = new ArrayList<>();
 }
