@@ -1,7 +1,8 @@
 package com.chatme.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
 @Entity
@@ -9,7 +10,7 @@ import lombok.Data;
 public class UserGroupChatRooms extends AbsUserChatRoom
 {
 	@ManyToOne
-	@JsonIgnoreProperties({ "userGroupChatRooms" })
+	@JsonIncludeProperties({"id", "name", "description"})
 	private GroupChatRoom chatRoom;
 	private Boolean isAdmin;
 }

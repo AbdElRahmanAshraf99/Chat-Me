@@ -1,9 +1,14 @@
 package com.chatme.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
@@ -20,6 +25,7 @@ public class PrivateChatRoom extends AbsChatRoom
 	}
 
 	@Override
+	@JsonIgnoreProperties({"userPrivateChatRooms"})
 	public List<? extends AbsUserChatRoom> fetchChatRoomUsers()
 	{
 		return getUserPrivateChatRooms();

@@ -7,8 +7,7 @@ import java.util.List;
 
 @Data
 @MappedSuperclass
-public abstract class AbsChatRoom
-{
+public abstract class AbsChatRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
