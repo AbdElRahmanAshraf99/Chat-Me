@@ -1,4 +1,4 @@
-package com.chatme.Utils;
+package com.chatme.utils;
 
 import java.math.BigDecimal;
 import java.util.*;

@@ -1,6 +1,6 @@
 package com.chatme.controller;
 
-import com.chatme.Utils.ObjectChecker;
+import com.chatme.utils.ObjectChecker;
 import com.chatme.domain.*;
 import com.chatme.repository.GroupChatRoomRepository;
 import com.chatme.repository.PrivateChatRoomRepository;

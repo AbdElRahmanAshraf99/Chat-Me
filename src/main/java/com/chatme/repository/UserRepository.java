@@ -9,7 +9,7 @@ public interface UserRepository extends CrudRepository<User, Long>
 {
 	List<User> findAllByEmail(String email);
 
-	List<User> findAllByUsername(String username);
+	User findByUsername(String username);
 
 	List<User> findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(String email, String username);
 }

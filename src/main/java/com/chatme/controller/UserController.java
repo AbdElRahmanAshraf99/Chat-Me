@@ -1,10 +1,11 @@
 package com.chatme.controller;
 
-import com.chatme.Utils.ObjectChecker;
 import com.chatme.domain.User;
 import com.chatme.repository.UserRepository;
+import com.chatme.utils.ObjectChecker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -16,29 +17,37 @@ public class UserController
 {
 	@Autowired
 	UserRepository userRepository;
+	@Autowired
+	PasswordEncoder passwordEncoder;
 
-	@PostMapping(value = "/add", consumes = { "multipart/form-data" })
+	@PostMapping(value = "/add", consumes = { "multipart/form-data", "application/json", MediaType.APPLICATION_FORM_URLENCODED_VALUE })
 	public ResponseEntity<String> addUser(@ModelAttribute User user)
 	{
 		String errorMsg = "";
 		// Username Validation
 		if (ObjectChecker.isEmptyOrNull(user.getUsername()))
+		{
 			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Username is required";
-		if (!userRepository.findAllByUsername(user.getUsername()).isEmpty())
-			errorMsg += (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + "- Username (" + user.getUsername() + ") is already exists";
-		errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Firstname", user.getFirstname()));
-		errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Lastname", user.getLastname()));
-		errorMsg = appendValidationMsgToMyMsg(errorMsg, validateEmailAndAppendMsgIfNeeded(user.getEmail()));
-		errorMsg = appendValidationMsgToMyMsg(errorMsg, validatePasswordAndAppendMsgIfNeeded(user.getPassword()));
+		}
+		if (ObjectChecker.isNotEmptyOrNull(userRepository.findByUsername(user.getUsername())))
+		{
+			return ResponseEntity.badRequest().body("Username (" + user.getUsername() + ") is already exists");
+		}
+		errorMsg += appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Firstname", user.getFirstname()));
+		errorMsg += appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Lastname", user.getLastname()));
+		errorMsg += appendValidationMsgToMyMsg(errorMsg, validateEmailAndAppendMsgIfNeeded(user.getEmail()));
+		errorMsg += appendValidationMsgToMyMsg(errorMsg, validatePasswordAndAppendMsgIfNeeded(user.getPassword()));
 		if (ObjectChecker.isNotEmptyOrNull(errorMsg))
 			return ResponseEntity.badRequest().body(errorMsg);
-		user.setPassword(user.getPassword());
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		userRepository.save(user);
 		return ResponseEntity.ok("Successful");
 	}
 
 	private String appendValidationMsgToMyMsg(String errorMsg, String validationMsg)
 	{
+		if (ObjectChecker.isEmptyOrNull(validationMsg))
+			return "";
 		return (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + validationMsg;
 	}
 
