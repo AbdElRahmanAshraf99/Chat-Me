@@ -1,6 +1,6 @@
 package com.chatme.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,10 +18,12 @@ public class User implements UserDetails
 {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonIgnore
     private Long id;
     private String username;
     private String firstname;
     private String lastname;
+    @JsonIgnore
     private String password;
     private String email;
 
@@ -40,30 +42,35 @@ public class User implements UserDetails
     @JsonIgnoreProperties({"user"})
     private List<UserGroupChatRooms> userGroupChatRooms = new ArrayList<>();
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()
     {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonExpired()
     {
         return true;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonLocked()
     {
         return true;
     }
 
+    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired()
     {
         return true;
     }
 
+    @JsonIgnore
     @Override
     public boolean isEnabled()
     {

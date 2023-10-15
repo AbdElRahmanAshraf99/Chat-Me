@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.*;
 import java.util.regex.*;
 
@@ -58,8 +59,9 @@ public class UserController
 	}
 
 	@GetMapping("/find-user")
-	public ResponseEntity<List<User>> findUsers(@RequestBody String usernameOrEmail)
+	public ResponseEntity<List<User>> findUsers(@RequestParam String usernameOrEmail)
 	{
+		//TODO:: exclude me and my friends
 		if (ObjectChecker.isEmptyOrNull(usernameOrEmail))
 			return ResponseEntity.ok(new ArrayList<>());
 		return ResponseEntity.ok(userRepository.findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(usernameOrEmail, usernameOrEmail));
@@ -76,6 +78,7 @@ public class UserController
 		User friend = userRepository.findById(friendId).orElse(null);
 		if (friend == null)
 			return ResponseEntity.badRequest().body("Can't find user with id (" + friendId + ")");
+		// TODO:: Check Friend not in user friends
 		currentUser.getFriends().add(friend);
 		friend.getFriends().add(currentUser);
 		userRepository.save(currentUser);
@@ -185,5 +188,12 @@ public class UserController
 	{
 		userRepository.deleteAll();
 		return ResponseEntity.ok("Success");
+	}
+
+	@GetMapping("/fetchUserData")
+	public ResponseEntity<User> fetchUserData(Principal principal)
+	{
+		User user = userRepository.findByUsername(principal.getName());
+		return ResponseEntity.ok(user);
 	}
 }
