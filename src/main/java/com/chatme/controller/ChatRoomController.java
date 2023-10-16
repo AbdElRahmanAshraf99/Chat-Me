@@ -162,7 +162,7 @@ public class ChatRoomController
      * adds  user to a room
      * @param roomId Long: id of the room to be added to           //required param//
      * @param userId Long: id of the user to be added              //required param//
-     * @return
+     * @return ResbonseEntity<String>  comtaining succes message
      */
     @PatchMapping(value = "/add-user")
     public ResponseEntity<String> AdUserToRoom(@RequestParam Long roomId, @RequestParam Long userId)
@@ -192,7 +192,7 @@ public class ChatRoomController
     @PatchMapping(value = "/remove-user")
     public ResponseEntity<String> RemoveUSerFromRoom(@RequestParam Long adminId, @RequestParam Long roomId, @RequestParam Long userId)
     {
-        AbsChatRoom room = groupChatRoomRepository.findById(roomId).orElse(null);
+        GroupChatRoom room = groupChatRoomRepository.findById(roomId).orElse(null);
         User admin = userRepository.findById(adminId).orElse(null);
         User user = userRepository.findById(userId).orElse(null);
         if (ObjectChecker.isEmptyOrNull(room))
@@ -211,7 +211,7 @@ public class ChatRoomController
         }
 
 
-        return ResponseEntity.ok("User: " + user.getUsername() + " was removed successfully");
+        return ResponseEntity.ok("User: " + user.getUsername() + " was removed from room: "+room.getName() +" successfully");
     }
 
     /***

@@ -59,12 +59,18 @@ public class UserController
 	}
 
 	@GetMapping("/find-user")
-	public ResponseEntity<List<User>> findUsers(@RequestParam String usernameOrEmail)
+	public ResponseEntity<List<User>> findUsers(@RequestParam String usernameOrEmail,Principal principal)
 	{
 		//TODO:: exclude me and my friends
 		if (ObjectChecker.isEmptyOrNull(usernameOrEmail))
 			return ResponseEntity.ok(new ArrayList<>());
-		return ResponseEntity.ok(userRepository.findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(usernameOrEmail, usernameOrEmail));
+		List<String>currentAndFriendsNames=new ArrayList<>();
+		User user = userRepository.findByUsername(principal.getName());
+		currentAndFriendsNames.add(principal.getName());
+		for(User friend:user.getFriends()){
+		currentAndFriendsNames.add(	friend.getUsername());
+		}
+		return ResponseEntity.ok(userRepository.findTop25ByUsernameContainingOrEmailContainingAndUsernameNotInOrderByUsername(usernameOrEmail, usernameOrEmail,currentAndFriendsNames));
 	}
 
 	@PostMapping("/add_friend")
@@ -79,6 +85,8 @@ public class UserController
 		if (friend == null)
 			return ResponseEntity.badRequest().body("Can't find user with id (" + friendId + ")");
 		// TODO:: Check Friend not in user friends
+		if(currentUser.getFriends().contains(friend)||friend.getFriends().contains(currentUser))
+			return ResponseEntity.ok("User (" + friendId + ") Is already A friend.");
 		currentUser.getFriends().add(friend);
 		friend.getFriends().add(currentUser);
 		userRepository.save(currentUser);
