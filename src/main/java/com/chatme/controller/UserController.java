@@ -64,23 +64,21 @@ public class UserController
 		//TODO:: exclude me and my friends
 		if (ObjectChecker.isEmptyOrNull(usernameOrEmail))
 			return ResponseEntity.ok(new ArrayList<>());
-		List<String>currentAndFriendsNames=new ArrayList<>();
 		User user = userRepository.findByUsername(principal.getName());
-		currentAndFriendsNames.add(principal.getName());
-		for(User friend:user.getFriends()){
-		currentAndFriendsNames.add(	friend.getUsername());
-		}
-		return ResponseEntity.ok(userRepository.findTop25ByUsernameContainingOrEmailContainingAndUsernameNotInOrderByUsername(usernameOrEmail, usernameOrEmail,currentAndFriendsNames));
+		 List<User> foundusers= userRepository.findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(usernameOrEmail, usernameOrEmail);
+		foundusers.removeAll(user.getFriends());
+		foundusers.remove(user);
+		return ResponseEntity.ok(foundusers);
 	}
 
 	@PostMapping("/add_friend")
-	public ResponseEntity<String> addFriend(@RequestParam Long userId, @RequestParam Long friendId)
+	public ResponseEntity<String> addFriend(Principal principal, @RequestParam Long friendId)
 	{
-		if (ObjectChecker.isAnyEmptyOrNull(userId, friendId))
+		if (ObjectChecker.isAnyEmptyOrNull(friendId))
 			return ResponseEntity.badRequest().body("Can't find user with id (null)");
-		User currentUser = userRepository.findById(userId).orElse(null);
-		if (currentUser == null)
-			return ResponseEntity.badRequest().body("Can't find user with id (" + userId + ")");
+		User currentUser = userRepository.findByUsername(principal.getName());
+//		if (currentUser == null)
+//			return ResponseEntity.badRequest().body("Can't find user with id (" + currentUse + ")");
 		User friend = userRepository.findById(friendId).orElse(null);
 		if (friend == null)
 			return ResponseEntity.badRequest().body("Can't find user with id (" + friendId + ")");
