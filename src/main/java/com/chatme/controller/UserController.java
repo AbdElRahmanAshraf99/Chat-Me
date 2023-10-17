@@ -61,14 +61,13 @@ public class UserController
 	@GetMapping("/find-user")
 	public ResponseEntity<List<User>> findUsers(@RequestParam String usernameOrEmail,Principal principal)
 	{
-		//TODO:: exclude me and my friends
 		if (ObjectChecker.isEmptyOrNull(usernameOrEmail))
 			return ResponseEntity.ok(new ArrayList<>());
 		User user = userRepository.findByUsername(principal.getName());
-		 List<User> foundusers= userRepository.findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(usernameOrEmail, usernameOrEmail);
-		foundusers.removeAll(user.getFriends());
-		foundusers.remove(user);
-		return ResponseEntity.ok(foundusers);
+		List<User> matchedUsers = userRepository.findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(usernameOrEmail, usernameOrEmail);
+		matchedUsers.removeAll(user.getFriends());
+		matchedUsers.remove(user);
+		return ResponseEntity.ok(matchedUsers);
 	}
 
 	@PostMapping("/add_friend")

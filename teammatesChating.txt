@@ -1,0 +1,12 @@
+Application:
+1- User
+    => Add                          (Done)
+    => Edit User                    (Running...)
+    => User Picture                 (Running...) Thinking in the best way to storing images in RDBMS
+    => Delete User                  ()
+    => JWT Token Expired            ()
+    => Long Live Access Token       ()
+    => Notifications (Requests)     ()
+
+- ChatRooms
+- Messages
