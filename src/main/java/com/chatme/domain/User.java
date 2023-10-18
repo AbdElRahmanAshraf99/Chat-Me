@@ -1,6 +1,7 @@
 package com.chatme.domain;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,7 +10,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Data
@@ -48,6 +51,11 @@ public class User implements UserDetails
     {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
+
+    @JsonIgnore
+    @Lob
+    @Column(name = "imagedata", length = 2000)
+    byte[] blobData;
 
     @JsonIgnore
     @Override

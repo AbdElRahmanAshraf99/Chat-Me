@@ -4,13 +4,22 @@ import com.chatme.domain.User;
 import com.chatme.repository.UserRepository;
 import com.chatme.utils.ObjectChecker;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Principal;
-import java.util.*;
-import java.util.regex.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/user")
@@ -61,13 +70,14 @@ public class UserController
 	@GetMapping("/find-user")
 	public ResponseEntity<List<User>> findUsers(@RequestParam String usernameOrEmail,Principal principal)
 	{
+		//TODO:: exclude me and my friends
 		if (ObjectChecker.isEmptyOrNull(usernameOrEmail))
 			return ResponseEntity.ok(new ArrayList<>());
 		User user = userRepository.findByUsername(principal.getName());
-		List<User> matchedUsers = userRepository.findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(usernameOrEmail, usernameOrEmail);
-		matchedUsers.removeAll(user.getFriends());
-		matchedUsers.remove(user);
-		return ResponseEntity.ok(matchedUsers);
+		 List<User> foundusers= userRepository.findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(usernameOrEmail, usernameOrEmail);
+		foundusers.removeAll(user.getFriends());
+		foundusers.remove(user);
+		return ResponseEntity.ok(foundusers);
 	}
 
 	@PostMapping("/add_friend")
@@ -200,5 +210,36 @@ public class UserController
 	{
 		User user = userRepository.findByUsername(principal.getName());
 		return ResponseEntity.ok(user);
+	}
+
+	@PostMapping(value = "/saveImage")
+	public ResponseEntity<String> addImage(@RequestParam("image") MultipartFile image,Principal principal)
+	{
+     User currentUser =userRepository.findByUsername(principal.getName());
+
+		if (image.getContentType().startsWith("image/"))
+			try
+		{
+			currentUser.setBlobData(image.getBytes());
+			userRepository.save(currentUser);
+			return ResponseEntity.ok("profile Image changed successfully");
+		} catch (IOException e)
+		{
+
+			e.getMessage();
+			return ResponseEntity.noContent().build();
+		}
+		return ResponseEntity.badRequest().body("not an image file");
+	}
+	@GetMapping(value = "/getImage")
+	public ResponseEntity<?> getImage(Principal principal)
+			{
+		User currentUser =userRepository.findByUsername(principal.getName());
+		byte[] image = currentUser.getBlobData();
+
+				return ResponseEntity.ok()
+						.contentType(MediaType.valueOf("image/png"))
+						.body(image);
+
 	}
 }

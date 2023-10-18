@@ -2,7 +2,7 @@ Application:
 1- User
     => Add                          (Done)
     => Edit User                    (Running...)
-    => User Picture                 (Running...) Thinking in the best way to storing images in RDBMS
+    => User Picture                 (Running...) Thinking in the best way to storing images in RDBMS  ///////<Server Side >(Done)
     => Delete User                  ()
     => JWT Token Expired            ()
     => Long Live Access Token       ()

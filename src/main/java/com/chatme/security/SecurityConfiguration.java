@@ -3,6 +3,7 @@ package com.chatme.security;
 import com.chatme.auth.JwtAuthorizationFilter;
 import com.chatme.domain.User;
 import com.chatme.repository.UserRepository;
+import com.chatme.webSockets.WebSocketConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.http.HttpMethod;

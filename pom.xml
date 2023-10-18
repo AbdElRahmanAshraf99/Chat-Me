@@ -70,12 +70,13 @@
             <artifactId>spring-webmvc</artifactId>
             <version>6.0.9</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
+        <!-- Spring security and session management -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
             <version>2.7.6</version>
         </dependency>
+        <!-- jason web token handling and creation       -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
@@ -87,6 +88,13 @@
             <artifactId>jaxb-api</artifactId>
             <version>2.3.1</version>
         </dependency>
+        <!-- Web sockets and message management -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+            <version>3.1.4</version>
+        </dependency>
+
     </dependencies>
 
     <build>
