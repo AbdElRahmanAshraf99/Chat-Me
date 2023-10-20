@@ -10,3 +10,5 @@ Application:
 
 - ChatRooms
 - Messages
+
+- Good Manage For Responses (Messages And Http code status)

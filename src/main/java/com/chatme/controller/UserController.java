@@ -4,22 +4,15 @@ import com.chatme.domain.User;
 import com.chatme.repository.UserRepository;
 import com.chatme.utils.ObjectChecker;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.regex.*;
 
 @RestController
 @RequestMapping("/user")
@@ -70,28 +63,25 @@ public class UserController
 	@GetMapping("/find-user")
 	public ResponseEntity<List<User>> findUsers(@RequestParam String usernameOrEmail,Principal principal)
 	{
-		//TODO:: exclude me and my friends
 		if (ObjectChecker.isEmptyOrNull(usernameOrEmail))
 			return ResponseEntity.ok(new ArrayList<>());
 		User user = userRepository.findByUsername(principal.getName());
-		 List<User> foundusers= userRepository.findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(usernameOrEmail, usernameOrEmail);
-		foundusers.removeAll(user.getFriends());
-		foundusers.remove(user);
-		return ResponseEntity.ok(foundusers);
+		List<User> matchedUsers = userRepository.findTop25ByUsernameContainingOrEmailContainingOrderByIdAsc(usernameOrEmail, usernameOrEmail);
+		matchedUsers.removeAll(user.getFriends());
+		matchedUsers.remove(user);
+		return ResponseEntity.ok(matchedUsers);
 	}
 
 	@PostMapping("/add_friend")
 	public ResponseEntity<String> addFriend(Principal principal, @RequestParam Long friendId)
 	{
-		if (ObjectChecker.isAnyEmptyOrNull(friendId))
+		//TODO::
+		if (ObjectChecker.isEmptyOrNull(friendId))
 			return ResponseEntity.badRequest().body("Can't find user with id (null)");
 		User currentUser = userRepository.findByUsername(principal.getName());
-//		if (currentUser == null)
-//			return ResponseEntity.badRequest().body("Can't find user with id (" + currentUse + ")");
 		User friend = userRepository.findById(friendId).orElse(null);
 		if (friend == null)
 			return ResponseEntity.badRequest().body("Can't find user with id (" + friendId + ")");
-		// TODO:: Check Friend not in user friends
 		if(currentUser.getFriends().contains(friend)||friend.getFriends().contains(currentUser))
 			return ResponseEntity.ok("User (" + friendId + ") Is already A friend.");
 		currentUser.getFriends().add(friend);
@@ -121,6 +111,7 @@ public class UserController
 	@PatchMapping("/update-user")
 	public ResponseEntity<String> updateUserData(@ModelAttribute User user)
 	{
+		//TODO::
 		User realUser = userRepository.findById(user.getId()).orElse(null);
 		if (realUser == null)
 			return ResponseEntity.badRequest().body("Wrong User Id");
@@ -213,33 +204,28 @@ public class UserController
 	}
 
 	@PostMapping(value = "/saveImage")
-	public ResponseEntity<String> addImage(@RequestParam("image") MultipartFile image,Principal principal)
+	public ResponseEntity<String> addImage(@RequestParam MultipartFile image, Principal principal)
 	{
-     User currentUser =userRepository.findByUsername(principal.getName());
-
-		if (image.getContentType().startsWith("image/"))
-			try
+		User currentUser = userRepository.findByUsername(principal.getName());
+		if (image == null || image.getContentType() == null || !image.getContentType().startsWith("image/"))
+			return ResponseEntity.badRequest().body("Attachment is not an image file");
+		try
 		{
 			currentUser.setBlobData(image.getBytes());
 			userRepository.save(currentUser);
 			return ResponseEntity.ok("profile Image changed successfully");
-		} catch (IOException e)
-		{
-
-			e.getMessage();
-			return ResponseEntity.noContent().build();
 		}
-		return ResponseEntity.badRequest().body("not an image file");
+		catch (IOException e)
+		{
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
 	}
+
 	@GetMapping(value = "/getImage")
 	public ResponseEntity<?> getImage(Principal principal)
-			{
-		User currentUser =userRepository.findByUsername(principal.getName());
+	{
+		User currentUser = userRepository.findByUsername(principal.getName());
 		byte[] image = currentUser.getBlobData();
-
-				return ResponseEntity.ok()
-						.contentType(MediaType.valueOf("image/png"))
-						.body(image);
-
+		return ResponseEntity.ok().contentType(MediaType.valueOf("image/png")).body(image);
 	}
 }
