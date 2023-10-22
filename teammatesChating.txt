@@ -1,12 +1,12 @@
 Application:
 1- User
     => Add                          (Done)
-    => Edit User                    (Running...)
-    => User Picture                 (Running...) Thinking in the best way to storing images in RDBMS  ///////<Server Side >(Done)
-    => Delete User                  ()
+    => Edit User                    (Done)
+    => User Picture                 (Done) Thinking in the best way to storing images in RDBMS  ///////<Server Side >(Done)
+    => Delete User                  (Done)
     => JWT Token Expired            ()
     => Long Live Access Token       ()
-    => Notifications (Requests)     ()
+    => Notifications (Requests)     () Using Firebase for notify me that there are new Notifications for the current user
 
 - ChatRooms
 - Messages

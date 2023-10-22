@@ -5,7 +5,6 @@ import com.chatme.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +24,7 @@ public class AuthController
 	{
 		try
 		{
-			Authentication authentication = authenticationManager.authenticate(
+			authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
 			User user = userRepository.findByUsername(req.getUsername());
 			String token = jwtUtil.createToken(user);

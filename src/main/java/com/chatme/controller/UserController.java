@@ -108,40 +108,53 @@ public class UserController
 		return matcher.matches();
 	}
 
-	@PatchMapping("/update-user")
-	public ResponseEntity<String> updateUserData(@ModelAttribute User user)
+	@PatchMapping(value = "/update-user", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+	public ResponseEntity updateUserData(Principal principal, @RequestParam Map<String, String> user)
 	{
-		//TODO::
-		User realUser = userRepository.findById(user.getId()).orElse(null);
+		User realUser = userRepository.findByUsername(principal.getName());
 		if (realUser == null)
-			return ResponseEntity.badRequest().body("Wrong User Id");
+			return ResponseEntity.badRequest().body("Wrong Username");
 		String errorMsg = "";
-		if (ObjectChecker.isNotEmptyOrNull(user.getFirstname()))
+		if (user.containsKey("firstname"))
 		{
-			errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Firstname", user.getFirstname()));
-			realUser.setFirstname(user.getFirstname());
+			errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Firstname", user.get("firstname")));
+			realUser.setFirstname(user.get("firstname"));
 		}
-		if (ObjectChecker.isNotEmptyOrNull(user.getLastname()))
+		if (user.containsKey("lastname"))
 		{
-			errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Lastname", user.getLastname()));
-			realUser.setLastname(user.getLastname());
+			errorMsg = appendValidationMsgToMyMsg(errorMsg, validateRequiredFieldsAndAppendMsgIfNeeded("Lastname", user.get("lastname")));
+			realUser.setLastname(user.get("lastname"));
 		}
-		if (ObjectChecker.isNotEmptyOrNull(user.getEmail()))
+		if (user.containsKey("email"))
 		{
-			errorMsg = appendValidationMsgToMyMsg(errorMsg, validateEmailAndAppendMsgIfNeeded(user.getEmail()));
-			realUser.setEmail(user.getEmail());
-		}
-		if (ObjectChecker.isNotEmptyOrNull(user.getPassword()))
-		{
-			errorMsg = appendValidationMsgToMyMsg(errorMsg, validatePasswordAndAppendMsgIfNeeded(user.getPassword()));
-			realUser.setPassword(user.getPassword());
+			errorMsg = appendValidationMsgToMyMsg(errorMsg, validateEmailAndAppendMsgIfNeeded(user.get("email")));
+			realUser.setEmail(user.get("email"));
 		}
 		if (ObjectChecker.isNotEmptyOrNull(errorMsg))
 		{
 			return ResponseEntity.badRequest().body(errorMsg);
 		}
 		userRepository.save(realUser);
-		return ResponseEntity.ok("Success");
+		return ResponseEntity.ok(realUser);
+	}
+
+	@PatchMapping(value = "/changePassword", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+	public ResponseEntity changeUserPassword(Principal principal, @RequestParam String oldPassword, @RequestParam String newPassword)
+	{
+		User user = userRepository.findByUsername(principal.getName());
+		if (user == null)
+			return ResponseEntity.badRequest().body("Wrong Username");
+		if (ObjectChecker.isAnyEmptyOrNull(oldPassword, newPassword))
+			return ResponseEntity.badRequest().body("Wrong Data");
+		if (!passwordEncoder.matches(oldPassword, user.getPassword()))
+			return ResponseEntity.badRequest().body("Old Password is not Correct");
+		String errorMsg = "";
+		errorMsg = appendValidationMsgToMyMsg(errorMsg, validatePasswordAndAppendMsgIfNeeded(newPassword));
+		if (ObjectChecker.isNotEmptyOrNull(errorMsg))
+			return ResponseEntity.badRequest().body(errorMsg);
+		user.setPassword(passwordEncoder.encode(newPassword));
+		userRepository.save(user);
+		return ResponseEntity.ok("Password Changed Successfully");
 	}
 
 	private String validatePasswordAndAppendMsgIfNeeded(String value)
@@ -180,13 +193,14 @@ public class UserController
 		return "";
 	}
 
-	@DeleteMapping("delete-user")
-	public ResponseEntity<String> deleteUser(@RequestParam Long id)
+	@DeleteMapping("/deleteAccount")
+	public ResponseEntity<String> deleteUser(Principal principal,@RequestParam String password)
 	{
-		if (userRepository.findById(id).isEmpty())
-			return ResponseEntity.badRequest().body("User not found");
-		userRepository.deleteById(id);
-		return ResponseEntity.ok("Success");
+		User user = userRepository.findByUsername(principal.getName());
+		if (!passwordEncoder.matches(password, user.getPassword()))
+			return ResponseEntity.badRequest().body("Password is not Correct");
+		userRepository.deleteById(user.getId());
+		return ResponseEntity.ok("Account deleted Successfully");
 	}
 
 	@DeleteMapping("delete-all-user")
@@ -204,14 +218,14 @@ public class UserController
 	}
 
 	@PostMapping(value = "/saveImage")
-	public ResponseEntity<String> addImage(@RequestParam MultipartFile image, Principal principal)
+	public ResponseEntity<String> addImage(@RequestParam("image") MultipartFile image, Principal principal)
 	{
 		User currentUser = userRepository.findByUsername(principal.getName());
 		if (image == null || image.getContentType() == null || !image.getContentType().startsWith("image/"))
 			return ResponseEntity.badRequest().body("Attachment is not an image file");
 		try
 		{
-			currentUser.setBlobData(image.getBytes());
+			currentUser.setImage(image.getBytes());
 			userRepository.save(currentUser);
 			return ResponseEntity.ok("profile Image changed successfully");
 		}
@@ -221,11 +235,20 @@ public class UserController
 		}
 	}
 
-	@GetMapping(value = "/getImage")
-	public ResponseEntity<?> getImage(Principal principal)
+	@PostMapping(value = "/removeImage")
+	public ResponseEntity<String> removeImage(Principal principal)
 	{
 		User currentUser = userRepository.findByUsername(principal.getName());
-		byte[] image = currentUser.getBlobData();
-		return ResponseEntity.ok().contentType(MediaType.valueOf("image/png")).body(image);
+		currentUser.setImage(null);
+		userRepository.save(currentUser);
+		return ResponseEntity.ok("profile Image removed successfully");
+	}
+
+	@GetMapping(value = "/getImage")
+	public ResponseEntity getImage(Principal principal)
+	{
+		User currentUser = userRepository.findByUsername(principal.getName());
+		byte[] image = currentUser.getImage();
+		return ResponseEntity.ok().body(image);
 	}
 }

@@ -54,8 +54,8 @@ public class User implements UserDetails
 
     @JsonIgnore
     @Lob
-    @Column(name = "imagedata", length = 2000)
-    byte[] blobData;
+    @Column(length = 2000)
+    byte[] image;
 
     @JsonIgnore
     @Override
