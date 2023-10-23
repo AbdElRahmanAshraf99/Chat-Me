@@ -5,6 +5,11 @@ import java.util.*;
 
 public class ObjectChecker
 {
+	/***
+	 *  checks whether an object is empty or null
+	 * @param object variable of Type Object
+	 * @return Boolean with state <Truer> if the object is empty or null</True> <False> if the Object is not Empty or null</False>
+	 */
 	public static boolean isEmptyOrNull(Object object)
 	{
 		if (object == null)
@@ -25,6 +30,12 @@ public class ObjectChecker
 		return !isEmptyOrNull(object);
 	}
 
+	/***
+	 * Compares Between two Variables Ofm Type Object
+	 * @param object1 variables Ofm Type Object
+	 * @param object2 variables Ofm Type Object
+	 * @return Boolean <True> if the Two Objects are equal</True> <False> If the Objects aren't equal</False>
+	 */
 	public static boolean areEqual(Object object1, Object object2)
 	{
 		if (object1 == object2)
@@ -47,6 +58,11 @@ public class ObjectChecker
 		return !areEqual(object1, object2);
 	}
 
+	/***
+	 * Checks whether Many Objects are empty or null
+	 * @param objects Many Objects seberated By commas like (Object1,Object2)
+	 * @return Boolean with state <Truer> if the object is empty or null</True> <False> if the Object is not Empty or null</False>
+	 */
 	public static boolean isAnyEmptyOrNull(Object... objects)
 	{
 		for (Object o : objects)

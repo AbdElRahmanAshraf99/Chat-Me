@@ -23,6 +23,11 @@ public class UserController
 	@Autowired
 	PasswordEncoder passwordEncoder;
 
+	/***
+	 * Creates  a new User entity in the data base
+	 * @param user A hasj map or <String,String> containing the user data
+	 * @return ResponseEntity<String> containing the Message of Success or failure
+	 */
 	@PostMapping(value = "/add", consumes = { "multipart/form-data", "application/json", MediaType.APPLICATION_FORM_URLENCODED_VALUE })
 	public ResponseEntity<String> addUser(@ModelAttribute User user)
 	{
@@ -47,6 +52,12 @@ public class UserController
 		return ResponseEntity.ok("Successful");
 	}
 
+	/***
+	 *  Appends a New String to an old String
+	 * @param errorMsg  String oldString to beappended to
+	 * @param validationMsg String new String to append
+	 * @return new Message consists of error Msg +""+validationMsg
+	 */
 	private String appendValidationMsgToMyMsg(String errorMsg, String validationMsg)
 	{
 		if (ObjectChecker.isEmptyOrNull(validationMsg))
@@ -54,12 +65,22 @@ public class UserController
 		return (ObjectChecker.isEmptyOrNull(errorMsg) ? "" : "\n") + validationMsg;
 	}
 
+	/***
+	 * GetMapping that Returns all theUsers in the DataBase
+	 * @return LIst<USer> containing all the users in DataBase
+	 */
 	@GetMapping(value = "/get-all")
 	public ResponseEntity<List<User>> getAllUsers()
 	{
 		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body((List<User>) userRepository.findAll());
 	}
 
+	/***
+	 * etMapping that Returns user By their USername or email from the DataBase
+	 * @param usernameOrEmail String userName or email
+	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
+	 * @return List<USer>of Top 25 Resault Found in the DataBase Orderd By id ASc
+	 */
 	@GetMapping("/find-user")
 	public ResponseEntity<List<User>> findUsers(@RequestParam String usernameOrEmail,Principal principal)
 	{
@@ -72,6 +93,12 @@ public class UserController
 		return ResponseEntity.ok(matchedUsers);
 	}
 
+	/***
+	 * PstMapping
+	 * @param principal
+	 * @param friendId
+	 * @return
+	 */
 	@PostMapping("/add_friend")
 	public ResponseEntity<String> addFriend(Principal principal, @RequestParam Long friendId)
 	{
@@ -90,6 +117,11 @@ public class UserController
 		return ResponseEntity.ok("User (" + friendId + ") has been added to your friends.");
 	}
 
+	/***
+	 * Checks whether an email is on the valid Form (examole.123@example.com)
+	 * @param email String email
+	 * @return Boolean <True> the email Form is valid</True> <False> the email form is onvalid</False>
+	 */
 	public static boolean isValidEmail(String email)
 	{
 		Pattern pattern = Pattern.compile(
@@ -98,6 +130,11 @@ public class UserController
 		return matcher.matches();
 	}
 
+	/***
+	 * Checks whether a password is valid containing uppercase and lower case and numbers and special characters and is over 8 characters long
+	 * @param password String password
+	 * @return Boolean <True>the password form is valid</True> <False>the password form is invalid</False>
+	 */
 	public static boolean isValidPassword(String password)
 	{
 		if (ObjectChecker.isEmptyOrNull(password))
@@ -108,6 +145,12 @@ public class UserController
 		return matcher.matches();
 	}
 
+	/***
+	 * Updates the Data Sent to the Server of the user
+	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
+	 * @param user Map<String,String> containing the attributes to be updated in user
+	 * @return <String> on un successful Request containing reason for failure</String> <User>the updated user after the success of the request</User>
+	 */
 	@PatchMapping(value = "/update-user", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public ResponseEntity updateUserData(Principal principal, @RequestParam Map<String, String> user)
 	{
@@ -138,6 +181,13 @@ public class UserController
 		return ResponseEntity.ok(realUser);
 	}
 
+	/***
+	 * PostMapping for user to change passwords old password have to match the database password
+	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
+	 * @param oldPassword <String> the old password to be changed</String>
+	 * @param newPassword <String>new passwod to be changed to</String>
+	 * @return RsponseEntity<String>containing the success msg or failure message</STring>
+	 */
 	@PatchMapping(value = "/changePassword", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public ResponseEntity changeUserPassword(Principal principal, @RequestParam String oldPassword, @RequestParam String newPassword)
 	{
@@ -157,6 +207,11 @@ public class UserController
 		return ResponseEntity.ok("Password Changed Successfully");
 	}
 
+	/***
+	 * Validates the passwordm to be present or empty or null
+	 * @param value String password to be validated
+	 * @return String error msg if the password is not valid
+	 */
 	private String validatePasswordAndAppendMsgIfNeeded(String value)
 	{
 		String errorMsg = "";
@@ -174,6 +229,11 @@ public class UserController
 		return errorMsg;
 	}
 
+	/***
+	 * Validates the email to be present or empty or null
+	 * @param value String email to be validated
+	 * @return String error msg if the email is not valid
+	 */
 	private String validateEmailAndAppendMsgIfNeeded(String value)
 	{
 		if (ObjectChecker.isEmptyOrNull(value))
@@ -186,6 +246,12 @@ public class UserController
 		return errorMsg;
 	}
 
+	/***
+	 * Validates any Field to be present or empty or null
+	 * @param fieldName String Field name to be validated
+	 * @param fieldValue String Field Value to be validated
+	 * @return String error msg if the Field is not valid
+	 */
 	public static String validateRequiredFieldsAndAppendMsgIfNeeded(String fieldName, String fieldValue)
 	{
 		if (ObjectChecker.isEmptyOrNull(fieldValue))
@@ -193,6 +259,12 @@ public class UserController
 		return "";
 	}
 
+	/***
+	 * DeleteMapping that delets a user entity in the database
+	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
+	 * @param password <String> the password of the current user that want to delete his data to be </String>
+	 * @return ResponseEntity<String> containing the success or failure msg</String>
+	 */
 	@DeleteMapping("/deleteAccount")
 	public ResponseEntity<String> deleteUser(Principal principal,@RequestParam String password)
 	{
@@ -203,6 +275,10 @@ public class UserController
 		return ResponseEntity.ok("Account deleted Successfully");
 	}
 
+	/***
+	 * Deletes all the User database
+	 * @return <STring> containing the success message</STring>
+	 */
 	@DeleteMapping("delete-all-user")
 	public ResponseEntity<String> deleteAllUsers()
 	{
@@ -210,6 +286,11 @@ public class UserController
 		return ResponseEntity.ok("Success");
 	}
 
+	/***
+	 * GetMapping fetches the data of the current user sending the request
+	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
+	 * @return <USER> data of the user sending the request</USER>
+	 */
 	@GetMapping("/fetchUserData")
 	public ResponseEntity<User> fetchUserData(Principal principal)
 	{
@@ -217,6 +298,12 @@ public class UserController
 		return ResponseEntity.ok(user);
 	}
 
+	/***
+	 * PostMapping that Uploads a profile picture to the user sending the request
+	 * @param image <MultipartFile> containing the ByteData of the image file uploaded</MultipartFile>
+	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
+	 * @return ResponseEntity<String> containig the Success message of failure or success</String>
+	 */
 	@PostMapping(value = "/saveImage")
 	public ResponseEntity<String> addImage(@RequestParam("image") MultipartFile image, Principal principal)
 	{
@@ -235,6 +322,11 @@ public class UserController
 		}
 	}
 
+	/***
+	 * PostMapping that removes the Blob of the image from the database for the user sending the request
+	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
+	 * @return ResponseEntity<String> containig the Success message of failure or success</String>
+	 */
 	@PostMapping(value = "/removeImage")
 	public ResponseEntity<String> removeImage(Principal principal)
 	{
@@ -244,6 +336,11 @@ public class UserController
 		return ResponseEntity.ok("profile Image removed successfully");
 	}
 
+	/***
+	 * GetMapping that fetches the blob data of the profile image from the database for the user sending the request
+	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
+	 * @return ResponseEntity<byte[]> containig the image File as Byte[]</byte[]>
+	 */
 	@GetMapping(value = "/getImage")
 	public ResponseEntity getImage(Principal principal)
 	{
