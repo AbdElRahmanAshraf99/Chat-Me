@@ -1,6 +1,6 @@
 package com.chatme.controller;
 
-import com.chatme.domain.User;
+import com.chatme.domain.*;
 import com.chatme.repository.UserRepository;
 import com.chatme.utils.ObjectChecker;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -304,7 +304,7 @@ public class UserController
 	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
 	 * @return ResponseEntity<String> containig the Success message of failure or success</String>
 	 */
-	@PostMapping(value = "/saveImage")
+	@PostMapping("/saveImage")
 	public ResponseEntity<String> addImage(@RequestParam("image") MultipartFile image, Principal principal)
 	{
 		User currentUser = userRepository.findByUsername(principal.getName());
@@ -327,7 +327,7 @@ public class UserController
 	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
 	 * @return ResponseEntity<String> containig the Success message of failure or success</String>
 	 */
-	@PostMapping(value = "/removeImage")
+	@PostMapping("/removeImage")
 	public ResponseEntity<String> removeImage(Principal principal)
 	{
 		User currentUser = userRepository.findByUsername(principal.getName());
@@ -341,11 +341,47 @@ public class UserController
 	 * @param principal Princibale Headr :Authorization containing a JWt that hase the data of the user sending the Request
 	 * @return ResponseEntity<byte[]> containig the image File as Byte[]</byte[]>
 	 */
-	@GetMapping(value = "/getImage")
+	@GetMapping("/getImage")
 	public ResponseEntity getImage(Principal principal)
 	{
 		User currentUser = userRepository.findByUsername(principal.getName());
 		byte[] image = currentUser.getImage();
 		return ResponseEntity.ok().body(image);
+	}
+
+	@PostMapping("/sendFriendRequest")
+	public ResponseEntity sendFriendRequest(Principal principal, @RequestParam String friendUsername)
+	{
+		User currentUser = userRepository.findByUsername(principal.getName());
+		User friend = userRepository.findByUsername(friendUsername);
+		FriendRequest request = friend.getFriendRequests().stream()
+				.filter(l -> ObjectChecker.areEqual(l.getFromUser().getUsername(), currentUser.getUsername())).findFirst().orElse(null);
+		if (request != null)
+			return ResponseEntity.ok("Friend Request Sent Successfully");
+		FriendRequest friendRequest = new FriendRequest();
+		friendRequest.setFromUser(currentUser);
+		friend.getFriendRequests().add(friendRequest);
+		SentFriendRequest sentFriendRequest = new SentFriendRequest();
+		sentFriendRequest.setToUser(friend);
+		currentUser.getSentFriendRequests().add(sentFriendRequest);
+		userRepository.saveAll(List.of(currentUser, friend));
+		return ResponseEntity.ok("Friend Request Sent Successfully");
+	}
+
+	@PostMapping("/cancelFriendRequest")
+	public ResponseEntity cancelFriendRequest(Principal principal, @RequestParam String friendUsername)
+	{
+		User user = userRepository.findByUsername(principal.getName());
+		User friend = userRepository.findByUsername(friendUsername);
+		FriendRequest request = friend.getFriendRequests().stream()
+				.filter(l -> ObjectChecker.areEqual(l.getFromUser().getUsername(), user.getUsername())).findFirst().orElse(null);
+		SentFriendRequest sentFriendRequest = user.getSentFriendRequests().stream()
+				.filter(l -> ObjectChecker.areEqual(l.getToUser().getUsername(), friend.getUsername())).findFirst().orElse(null);
+		if (request == null && sentFriendRequest == null)
+			return ResponseEntity.ok("Friend Request Removed Successfully");
+		friend.getFriendRequests().remove(request);
+		user.getSentFriendRequests().remove(sentFriendRequest);
+		userRepository.saveAll(List.of(user, friend));
+		return ResponseEntity.ok("Friend Request Removed Successfully");
 	}
 }

@@ -10,5 +10,10 @@ Application:
 
 - ChatRooms
 - Messages
-
 - Good Manage For Responses (Messages And Http code status)
+
+- Performance Hints
+    1-Login Btn -> Circular Progress when Clicked
+    2-Save Btn (Change Password) -> Circular Progress when Clicked
+    3-Save Btn (Delete Account) -> Circular Progress when Clicked
+    4-Compress Images in Mobile App

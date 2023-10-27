@@ -1,7 +1,6 @@
 package com.chatme.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -10,9 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Data
@@ -29,15 +26,12 @@ public class User implements UserDetails
     @JsonIgnore
     private String password;
     private String email;
-
     @CreationTimestamp
     private LocalDateTime creationDate;
-
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "ChatUser_friends", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "friend_id"))
     @JsonIgnoreProperties({"friends","chatRooms"})
     private List<User> friends = new ArrayList<>();
-
     @OneToMany(mappedBy = "user")
     @JsonIgnoreProperties({"user"})
     private List<UserPrivateChatRooms> userPrivateChatRooms = new ArrayList<>();
@@ -52,10 +46,17 @@ public class User implements UserDetails
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
-    @JsonIgnore
     @Lob
     @Column(length = 2000)
     byte[] image;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private List<FriendRequest> friendRequests = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private List<SentFriendRequest> sentFriendRequests = new ArrayList<>();
 
     @JsonIgnore
     @Override
