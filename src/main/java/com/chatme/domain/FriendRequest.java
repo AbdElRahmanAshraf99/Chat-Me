@@ -12,10 +12,9 @@ import java.time.LocalDateTime;
 public class FriendRequest
 {
 	@Id
-	@JsonIgnore
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	@JsonIncludeProperties({ "username" })
+	@JsonIncludeProperties({ "username", "firstname", "lastname", "image" })
 	@ManyToOne
 	private User fromUser;
 	@CreationTimestamp

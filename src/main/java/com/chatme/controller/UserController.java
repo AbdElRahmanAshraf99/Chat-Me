@@ -49,7 +49,7 @@ public class UserController
 			return ResponseEntity.badRequest().body(errorMsg);
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		userRepository.save(user);
-		return ResponseEntity.ok("Successful");
+		return ResponseEntity.ok("Register Successful");
 	}
 
 	/***
@@ -91,30 +91,6 @@ public class UserController
 		matchedUsers.removeAll(user.getFriends());
 		matchedUsers.remove(user);
 		return ResponseEntity.ok(matchedUsers);
-	}
-
-	/***
-	 * PstMapping
-	 * @param principal
-	 * @param friendId
-	 * @return
-	 */
-	@PostMapping("/add_friend")
-	public ResponseEntity<String> addFriend(Principal principal, @RequestParam Long friendId)
-	{
-		//TODO::
-		if (ObjectChecker.isEmptyOrNull(friendId))
-			return ResponseEntity.badRequest().body("Can't find user with id (null)");
-		User currentUser = userRepository.findByUsername(principal.getName());
-		User friend = userRepository.findById(friendId).orElse(null);
-		if (friend == null)
-			return ResponseEntity.badRequest().body("Can't find user with id (" + friendId + ")");
-		if(currentUser.getFriends().contains(friend)||friend.getFriends().contains(currentUser))
-			return ResponseEntity.ok("User (" + friendId + ") Is already A friend.");
-		currentUser.getFriends().add(friend);
-		friend.getFriends().add(currentUser);
-		userRepository.save(currentUser);
-		return ResponseEntity.ok("User (" + friendId + ") has been added to your friends.");
 	}
 
 	/***
@@ -383,5 +359,44 @@ public class UserController
 		user.getSentFriendRequests().remove(sentFriendRequest);
 		userRepository.saveAll(List.of(user, friend));
 		return ResponseEntity.ok("Friend Request Removed Successfully");
+	}
+
+	@PostMapping("/acceptFriendRequest")
+	public ResponseEntity<String> acceptFriendRequest(Principal principal, @RequestParam String friendUsername)
+	{
+		if (ObjectChecker.isEmptyOrNull(friendUsername))
+			return ResponseEntity.badRequest().body("Can't find user with username (" + friendUsername + ")");
+		User currentUser = userRepository.findByUsername(principal.getName());
+		User friend = userRepository.findByUsername(friendUsername);
+		if (currentUser.getFriendRequests().stream().anyMatch(l -> ObjectChecker.areEqual(l.getFromUser(), friend)))
+			currentUser.getFriendRequests().removeIf(l -> ObjectChecker.areEqual(l.getFromUser(), friend));
+		if (friend.getSentFriendRequests().stream().anyMatch(l -> ObjectChecker.areEqual(l.getToUser(), currentUser)))
+			friend.getSentFriendRequests().removeIf(l -> ObjectChecker.areEqual(l.getToUser(), currentUser));
+		currentUser.getFriends().add(friend);
+		friend.getFriends().add(currentUser);
+		userRepository.saveAll(List.of(friend, currentUser));
+		return ResponseEntity.ok("User (" + friend.getFirstname() + " " + friend.getLastname() + ") has been added to your friends.");
+	}
+
+	@PostMapping("/declineFriendRequest")
+	public ResponseEntity<String> declineFriendRequest(Principal principal, @RequestParam String friendUsername)
+	{
+		if (ObjectChecker.isEmptyOrNull(friendUsername))
+			return ResponseEntity.badRequest().body("Can't find user with username (" + friendUsername + ")");
+		User currentUser = userRepository.findByUsername(principal.getName());
+		User friend = userRepository.findByUsername(friendUsername);
+		if (currentUser.getFriendRequests().stream().anyMatch(l -> ObjectChecker.areEqual(l.getFromUser(), friend)))
+			currentUser.getFriendRequests().removeIf(l -> ObjectChecker.areEqual(l.getFromUser(), friend));
+		if (friend.getSentFriendRequests().stream().anyMatch(l -> ObjectChecker.areEqual(l.getToUser(), currentUser)))
+			friend.getSentFriendRequests().removeIf(l -> ObjectChecker.areEqual(l.getToUser(), currentUser));
+		userRepository.saveAll(List.of(friend, currentUser));
+		return ResponseEntity.ok("Friend Request is successfully declined.");
+	}
+
+	@GetMapping("/readFriendRequests")
+	public ResponseEntity readFriendRequests(Principal principal)
+	{
+		User user = userRepository.findByUsername(principal.getName());
+		return ResponseEntity.ok(user.getFriendRequests());
 	}
 }
